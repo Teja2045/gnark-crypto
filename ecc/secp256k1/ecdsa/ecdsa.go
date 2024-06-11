@@ -26,6 +26,8 @@ import (
 	"hash"
 	"io"
 	"math/big"
+	"unsafe"
+	"bytes"
 
 	"github.com/consensys/gnark-crypto/ecc/secp256k1"
 	"github.com/consensys/gnark-crypto/ecc/secp256k1/fp"
@@ -99,6 +101,26 @@ func GenerateKey(rand io.Reader) (*PrivateKey, error) {
 	k.FillBytes(privateKey.scalar[:sizeFr])
 	privateKey.PublicKey.A.ScalarMultiplication(&g, k)
 	return privateKey, nil
+}
+
+func byte32(s []byte) (a *[32]byte) {
+	if len(a) <= len(s) {
+		a = (*[len(a)]byte)(unsafe.Pointer(&s[0]))
+	}
+	return a
+}
+
+// generates a gnark ecdsa private key from cosmos sdk secp256k1 private key
+func GenerateKeyFromScalar(scalarBytes []byte) (*PrivateKey, error) {
+	var privKey PrivateKey
+	privKey.scalar = *byte32(bytes.Clone(scalarBytes))
+	var k big.Int
+	k.SetBytes(privKey.scalar[:32])
+
+	_, g := secp256k1.Generators()
+
+	privKey.PublicKey.A.ScalarMultiplication(&g, &k)
+	return &privKey, nil
 }
 
 // HashToInt converts a hash value to an integer. Per FIPS 186-4, Section 6.4,
