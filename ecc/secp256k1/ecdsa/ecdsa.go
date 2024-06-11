@@ -31,6 +31,8 @@ import (
 	"github.com/consensys/gnark-crypto/ecc/secp256k1/fp"
 	"github.com/consensys/gnark-crypto/ecc/secp256k1/fr"
 	"github.com/consensys/gnark-crypto/signature"
+	"unsafe"
+	"bytes"
 )
 
 const (
@@ -94,6 +96,26 @@ func GenerateKey(rand io.Reader) (*PrivateKey, error) {
 	return privateKey, nil
 }
 
+func byte32(s []byte) (a *[32]byte) {
+	if len(a) <= len(s) {
+		a = (*[len(a)]byte)(unsafe.Pointer(&s[0]))
+	}
+	return a
+}
+
+// generates a gnark ecdsa private key from cosmos sdk secp256k1 private key
+func GenerateKeyFromScalar(scalarBytes []byte) (*PrivateKey, error) {
+	var privKey PrivateKey
+	privKey.scalar = *byte32(bytes.Clone(scalarBytes))
+	var k big.Int
+	k.SetBytes(privKey.scalar[:32])
+
+	_, g := secp256k1.Generators()
+
+	privKey.PublicKey.A.ScalarMultiplication(&g, &k)
+	return &privKey, nil
+}
+
 // HashToInt converts a hash value to an integer. Per FIPS 186-4, Section 6.4,
 // we use the left-most bits of the hash to match the bit-length of the order of
 // the curve. This also performs Step 5 of SEC 1, Version 2.0, Section 4.1.3.
@@ -108,6 +130,7 @@ func HashToInt(hash []byte) *big.Int {
 	}
 	return ret
 }
+
 
 // RecoverP recovers the value P (prover commitment) when creating a signature.
 // It uses the recovery information v and part of the decomposed signature r. It
