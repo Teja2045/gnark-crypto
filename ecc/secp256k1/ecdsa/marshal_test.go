@@ -55,7 +55,7 @@ func TestSerialization(t *testing.T) {
 				return false
 			}
 
-			return end.PublicKey.Equal(&privKey.PublicKey) && subtle.ConstantTimeCompare(end.scalar[:], privKey.scalar[:]) == 1
+			return end.PublicKey.Equal(&privKey.PublicKey) && subtle.ConstantTimeCompare(end.Scalar[:], privKey.Scalar[:]) == 1
 
 		},
 	))

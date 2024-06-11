@@ -52,7 +52,7 @@ type PublicKey struct {
 // PrivateKey represents an ECDSA private key
 type PrivateKey struct {
 	PublicKey PublicKey
-	scalar    [sizeFr]byte // secret scalar, in big Endian
+	Scalar    [sizeFr]byte // secret scalar, in big Endian
 }
 
 // Signature represents an ECDSA signature
@@ -89,7 +89,7 @@ func GenerateKey(rand io.Reader) (*PrivateKey, error) {
 	_, g := secp256k1.Generators()
 
 	privateKey := new(PrivateKey)
-	k.FillBytes(privateKey.scalar[:sizeFr])
+	k.FillBytes(privateKey.Scalar[:sizeFr])
 	privateKey.PublicKey.A.ScalarMultiplication(&g, k)
 	return privateKey, nil
 }
@@ -189,7 +189,7 @@ func nonce(privateKey *PrivateKey, hash []byte) (csprng *cipher.StreamReader, er
 
 	// Initialize an SHA-512 hash context; digest...
 	md := sha512.New()
-	md.Write(privateKey.scalar[:sizeFr]) // the private key,
+	md.Write(privateKey.Scalar[:sizeFr]) // the private key,
 	md.Write(entropy)                    // the entropy,
 	md.Write(hash)                       // and the input hash;
 	key := md.Sum(nil)[:32]              // and compute ChopMD-256(SHA-512),
@@ -239,7 +239,7 @@ func (privKey *PrivateKey) SignForRecover(message []byte, hFunc hash.Hash) (v ui
 	r, s = new(big.Int), new(big.Int)
 
 	scalar, kInv := new(big.Int), new(big.Int)
-	scalar.SetBytes(privKey.scalar[:sizeFr])
+	scalar.SetBytes(privKey.Scalar[:sizeFr])
 	for {
 		for {
 			csprng, err := nonce(privKey, message)

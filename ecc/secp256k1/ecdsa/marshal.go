@@ -98,7 +98,7 @@ func (privKey *PrivateKey) Bytes() []byte {
 	var res [sizePrivateKey]byte
 	pubkBin := privKey.PublicKey.A.RawBytes()
 	subtle.ConstantTimeCopy(1, res[:sizePublicKey], pubkBin[:])
-	subtle.ConstantTimeCopy(1, res[sizePublicKey:sizePrivateKey], privKey.scalar[:])
+	subtle.ConstantTimeCopy(1, res[sizePublicKey:sizePrivateKey], privKey.Scalar[:])
 	return res[:]
 }
 
@@ -116,7 +116,7 @@ func (privKey *PrivateKey) SetBytes(buf []byte) (int, error) {
 		return 0, err
 	}
 	n += sizePublicKey
-	subtle.ConstantTimeCopy(1, privKey.scalar[:], buf[sizePublicKey:sizePrivateKey])
+	subtle.ConstantTimeCopy(1, privKey.Scalar[:], buf[sizePublicKey:sizePrivateKey])
 	n += sizeFr
 	return n, nil
 }
